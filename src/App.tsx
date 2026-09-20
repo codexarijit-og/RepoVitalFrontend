@@ -9,7 +9,7 @@ import { AboutSection } from './components/AboutSection';
 import { CiteModal } from './components/CiteModal';
 import { AuditInput, SlideId, MaltaAuditResult } from './types';
 import { PRESETS, INITIAL_AUDIT_RESULT } from './data/mockData';
-import { runMaltaAudit } from './utils/maltaEngine';
+import { runLiveMaltaAudit } from './utils/liveAuditBridge';
 
 export default function App() {
   const [currentSlide, setCurrentSlide] = useState<SlideId>('hero');
@@ -28,15 +28,19 @@ export default function App() {
 
   const [auditResult, setAuditResult] = useState<MaltaAuditResult>(INITIAL_AUDIT_RESULT);
 
-  const handleStartAudit = () => {
+  const handleStartAudit = async () => {
     setIsScanning(true);
     setCurrentSlide('dashboard');
 
-    setTimeout(() => {
-      const result = runMaltaAudit(input);
+    try {
+      console.log('🚀 Executing live backend MALTA audit for:', input);
+      const result = await runLiveMaltaAudit(input);
       setAuditResult(result);
+    } catch (err) {
+      console.error('Audit execution error:', err);
+    } finally {
       setIsScanning(false);
-    }, 1800);
+    }
   };
 
   return (
@@ -65,16 +69,10 @@ export default function App() {
         isScanning={isScanning}
       />
 
-      {/* Slide Navigation Bar at the top of the website below heading */}
-      <div className="w-full pt-4 pb-2 px-4 flex items-center justify-center">
-        <SlideNavBar
-          currentSlide={currentSlide}
-          onSelectSlide={setCurrentSlide}
-        />
-      </div>
+      
 
       {/* Main Slide Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 md:px-8 pt-2 pb-16 w-full flex flex-col justify-center">
+      <main className="flex-1 max-w-7xl mx-auto px-4 md:px-8 pt-24 sm:pt-28 pb-16 w-full flex flex-col justify-center">
         <AnimatePresence mode="wait">
           {currentSlide === 'hero' && (
             <motion.div
